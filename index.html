@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KUIS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        #quiz-container {
+            margin-top: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        #participants-list {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>KUIS</h1>
+        <div id="participants-list">
+            <h2>Nama yang Sudah Mengikuti Kuis:</h2>
+            <ul id="participants"></ul>
+        </div>
+        <div id="name-container">
+            <h2>Masukkan Nama Anda</h2>
+            <input type="text" id="name-input" placeholder="Nama Anda">
+            <button id="start-btn">Mulai Kuis</button>
+        </div>
+        <div id="quiz-container" class="hidden">
+            <!-- Pertanyaan dan opsi kuis akan ditempatkan di sini -->
+        </div>
+        <div>
+            <button id="prev-btn" class="hidden">Sebelumnya</button>
+            <button id="next-btn" class="hidden">Berikutnya</button>
+            <button id="submit-btn" class="hidden">Submit</button>
+        </div>
+        <div id="result" class="hidden"></div>
+        <div id="reset-container" class="hidden">
+            <button id="reset-btn">Ganti Nama dan Mulai Lagi</button>
+        </div>
+    </div>
+    <script>
+        const quizData = [
+            {
+                question: "Apakah kamu manusia?",
+                options: ["iya", "tidak", "yo gak tau", "robot"],
+                correct: "iya"
+            },
+            {
+                question: "Ada berapa manusia di bumi in?",
+                options: ["1.000.000.000", "Banyak", "9.999", "sedikit"],
+                correct: "Banyak"
+            },
+            {
+                question: "Gunung tertinggi di dunia adalah?",
+                options: ["K2", "Makalu", "Everest", "Kilimanjaro"],
+                correct: "Everest"
+            },
+            {
+                question: "1+1=?",
+                options: ["23", "2", "jendela", "11"],
+                correct: "2"
+            }
+            // Tambahkan lebih banyak pertanyaan di sini
+        ];
+
+        const participants = [];
+        
+        const participantsList = document.getElementById('participants');
+        const nameContainer = document.getElementById('name-container');
+        const nameInput = document.getElementById('name-input');
+        const startBtn = document.getElementById('start-btn');
+        const quizContainer = document.getElementById('quiz-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const result = document.getElementById('result');
+        const resetContainer = document.getElementById('reset-container');
+        const resetBtn = document.getElementById('reset-btn');
+
+        let currentQuestion = 0;
+        let score = 0;
+        let userName = "";
+        let userAnswers = new Array(quizData.length);
+
+        startBtn.addEventListener('click', () => {
+            userName = nameInput.value.trim();
+            if (userName === "") {
+                alert("Silakan masukkan nama Anda.");
+                return;
+            }
+            participants.push(userName);
+            updateParticipantsList();
+            nameContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            prevBtn.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+            submitBtn.classList.remove('hidden');
+            loadQuiz();
+        });
+
+        function updateParticipantsList() {
+            participantsList.innerHTML = participants.map(participant => `<li>${participant}</li>`).join('');
+        }
+
+        function loadQuiz() {
+            const currentQuizData = quizData[currentQuestion];
+            quizContainer.innerHTML = `
+                <h2>${currentQuizData.question}</h2>
+                ${currentQuizData.options.map((option, index) => `
+                    <div>
+                        <input type="radio" name="option" value="${option}" id="option${index}" ${userAnswers[currentQuestion] === option ? 'checked' : ''}>
+                        <label for="option${index}">${option}</label>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function checkAnswer() {
+            const selectedOption = document.querySelector('input[name="option"]:checked');
+            if (selectedOption) {
+                userAnswers[currentQuestion] = selectedOption.value;
+            }
+
+            if (userAnswers[currentQuestion] === quizData[currentQuestion].correct) {
+                score++;
+            }
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestion > 0) {
+                checkAnswer();
+                currentQuestion--;
+                loadQuiz();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestion < quizData.length - 1) {
+                checkAnswer();
+                currentQuestion++;
+                loadQuiz();
+            }
+        });
+
+        submitBtn.addEventListener('click', () => {
+            checkAnswer();
+            displayResult();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            resetQuiz();
+        });
+
+        function displayResult() {
+            quizContainer.classList.add('hidden');
+            prevBtn.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+            result.classList.remove('hidden');
+            resetContainer.classList.remove('hidden');
+
+            let correctAnswers = userAnswers.filter((answer, index) => answer === quizData[index].correct).length;
+            let incorrectAnswers = quizData.length - correctAnswers;
+
+            result.innerHTML = `
+                <h2>Terima kasih, ${userName}!</h2>
+                <p>Anda menjawab ${correctAnswers} dari ${quizData.length} pertanyaan dengan benar.</p>
+                <p>Hasil Jawaban Anda:</p>
+                <ul>
+                    ${quizData.map((data, index) => `
+                        <li>${index + 1}. ${data.question} - ${userAnswers[index] === quizData[index].correct ? '<strong>Benar</strong>' : '<strong>Salah</strong>'}</li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+
+        function resetQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            userName = "";
+            userAnswers = new Array(quizData.length);
+
+            nameInput.value = "";
+            nameContainer.classList.remove('hidden');
+            quizContainer.classList.add('hidden');
+            result.classList.add('hidden');
+            resetContainer.classList.add('hidden');
+            prevBtn.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+        }
+
+        loadQuiz();
+    </script>
+</body>
+</html>
